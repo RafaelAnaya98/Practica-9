@@ -1,0 +1,10 @@
+# CONTEXTO GLOBAL DEL PROYECTO
+Este proyecto es una aplicación móvil de fitness desarrollada con React Native y Expo. Se construirá de forma iterativa mediante una serie de prompts secuenciales que se enfocarán principalmente en la interfaz y la experiencia de usuario.
+
+# REGLAS ARQUITECTÓNICAS ESTRICTAS
+Para garantizar que el código sea escalable y no se rompa en futuras iteraciones, el agente de IA DEBE acatar estas directrices técnicas de forma obligatoria, incluso si los prompts piden "solo interfaz" o "sin lógica real":
+
+1. Manejo de Estado Global: Configura e implementa `Zustand` (o React Context) desde el primer paso. Cualquier dato que se muestre en pantalla (rutinas, temporizadores, historial) debe alimentarse del estado global, no de estados locales aislados en los componentes.
+2. Persistencia Preparada: Configura `AsyncStorage` para la persistencia local. Los datos de ejemplo iniciales deben simular que fluyen a través de este sistema para facilitar su posterior reemplazo por datos reales.
+3. Principio de No Destrucción: Antes de generar código nuevo para cumplir un prompt, analiza la estructura existente. No reescribas ni elimines la lógica de estado o navegación creada en pasos anteriores a menos que el prompt indique explícitamente modificar un comportamiento pasado.
+4. Separación de Responsabilidades: Mantén los componentes de UI (pantallas) separados de la lógica de negocio y de los archivos de estado global.

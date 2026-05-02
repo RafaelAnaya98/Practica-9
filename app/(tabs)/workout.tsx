@@ -1,28 +1,100 @@
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image, Modal, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useFitnessStore } from '@/store/useStore';
+import { useFitnessStore, Exercise } from '@/store/useStore';
 
 export default function WorkoutScreen() {
-  const { currentWorkout } = useFitnessStore();
+  const { 
+    currentWorkout, 
+    exercises,
+    addExerciseToWorkout,
+    removeExerciseFromWorkout,
+    addSetToExercise,
+    updateSet,
+    toggleSetCompletion
+  } = useFitnessStore();
+
+  const [isModalVisible, setModalVisible] = useState(false);
+
+  const handleAddExercise = (exercise: Exercise) => {
+    addExerciseToWorkout(exercise);
+    setModalVisible(false);
+  };
+
+  const calculateTotalVolume = () => {
+    let volume = 0;
+    currentWorkout.forEach(item => {
+      item.sets.forEach(set => {
+        if (set.completed && set.weight && set.reps) {
+          volume += parseFloat(set.weight) * parseInt(set.reps, 10);
+        }
+      });
+    });
+    return volume;
+  };
+
+  const renderExerciseModal = () => (
+    <Modal visible={isModalVisible} animationType="slide" presentationStyle="pageSheet">
+      <SafeAreaView style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle}>Añadir Ejercicio</Text>
+          <TouchableOpacity onPress={() => setModalVisible(false)}>
+            <Ionicons name="close" size={28} color="#fff" />
+          </TouchableOpacity>
+        </View>
+        <FlatList
+          data={exercises}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.modalExerciseCard} onPress={() => handleAddExercise(item)}>
+              <Image source={{ uri: item.thumbnail }} style={styles.thumbnail} />
+              <View>
+                <Text style={styles.exerciseName}>{item.name}</Text>
+                <Text style={styles.exerciseMuscle}>{item.muscle} • {item.equipment}</Text>
+              </View>
+              <Ionicons name="add-circle-outline" size={24} color="#00ffcc" style={{ marginLeft: 'auto' }} />
+            </TouchableOpacity>
+          )}
+          contentContainerStyle={{ padding: 20 }}
+        />
+      </SafeAreaView>
+    </Modal>
+  );
+
+  if (currentWorkout.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Ionicons name="barbell-outline" size={80} color="#333" />
+        <Text style={styles.emptyTitle}>¿Listo para entrenar?</Text>
+        <Text style={styles.emptySubtitle}>Añade ejercicios a tu rutina para comenzar a registrar tu progreso.</Text>
+        <TouchableOpacity style={styles.primaryButton} onPress={() => setModalVisible(true)}>
+          <Ionicons name="add" size={20} color="#000" />
+          <Text style={styles.primaryButtonText}>Añadir Ejercicio</Text>
+        </TouchableOpacity>
+        {renderExerciseModal()}
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Día de Pecho y Tríceps</Text>
-        <Text style={styles.headerSubtitle}>Volumen actual: 0 kg</Text>
+        <Text style={styles.headerTitle}>Entrenamiento Activo</Text>
+        <Text style={styles.headerSubtitle}>Volumen actual: {calculateTotalVolume()} kg</Text>
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        {currentWorkout.map((item, index) => (
+        {currentWorkout.map((item) => (
           <View key={item.id} style={styles.exerciseCard}>
             <View style={styles.exerciseHeader}>
               <Image source={{ uri: item.exercise.thumbnail }} style={styles.thumbnail} />
-              <View>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.exerciseName}>{item.exercise.name}</Text>
                 <Text style={styles.exerciseMuscle}>{item.exercise.muscle} • {item.exercise.equipment}</Text>
               </View>
-              <TouchableOpacity style={styles.menuButton}>
-                <Ionicons name="ellipsis-vertical" size={20} color="#888" />
+              <TouchableOpacity style={styles.menuButton} onPress={() => removeExerciseFromWorkout(item.id)}>
+                <Ionicons name="trash-outline" size={20} color="#ff4444" />
               </TouchableOpacity>
             </View>
 
@@ -37,40 +109,52 @@ export default function WorkoutScreen() {
 
             {/* Sets rows */}
             {item.sets.map((set, setIndex) => (
-              <View key={set.id} style={styles.setRow}>
+              <View key={set.id} style={[styles.setRow, set.completed && styles.setRowCompleted]}>
                 <View style={styles.setNumberBadge}>
                   <Text style={styles.setNumberText}>{setIndex + 1}</Text>
                 </View>
                 
-                <Text style={styles.previousText}>{set.weight}kg x {set.reps}</Text>
+                <Text style={styles.previousText}>-</Text>
                 
                 <TextInput
                   style={styles.input}
-                  placeholder={set.weight}
+                  placeholder="0"
                   placeholderTextColor="#555"
                   keyboardType="numeric"
+                  value={set.weight}
+                  onChangeText={(val) => updateSet(item.id, set.id, 'weight', val)}
                 />
                 
                 <TextInput
                   style={styles.input}
-                  placeholder={set.reps}
+                  placeholder="0"
                   placeholderTextColor="#555"
                   keyboardType="numeric"
+                  value={set.reps}
+                  onChangeText={(val) => updateSet(item.id, set.id, 'reps', val)}
                 />
 
-                <TouchableOpacity style={styles.checkButton}>
-                  <Ionicons name="checkmark" size={18} color="#555" />
+                <TouchableOpacity 
+                  style={[styles.checkButton, set.completed && styles.checkButtonActive]}
+                  onPress={() => toggleSetCompletion(item.id, set.id)}
+                >
+                  <Ionicons name="checkmark" size={18} color={set.completed ? "#000" : "#555"} />
                 </TouchableOpacity>
               </View>
             ))}
 
-            <TouchableOpacity style={styles.addSetButton}>
+            <TouchableOpacity style={styles.addSetButton} onPress={() => addSetToExercise(item.id)}>
               <Ionicons name="add" size={18} color="#00ffcc" />
               <Text style={styles.addSetText}>Añadir Serie</Text>
             </TouchableOpacity>
           </View>
         ))}
         
+        <TouchableOpacity style={styles.addExerciseCardButton} onPress={() => setModalVisible(true)}>
+          <Ionicons name="add-circle" size={24} color="#00ffcc" />
+          <Text style={styles.addExerciseCardText}>Añadir Ejercicio</Text>
+        </TouchableOpacity>
+
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
@@ -79,6 +163,8 @@ export default function WorkoutScreen() {
           <Text style={styles.finishButtonText}>Terminar Entrenamiento</Text>
         </TouchableOpacity>
       </View>
+
+      {renderExerciseModal()}
     </View>
   );
 }
@@ -87,6 +173,40 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
+  },
+  emptyContainer: {
+    flex: 1,
+    backgroundColor: '#000000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 30,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    color: '#888',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  primaryButton: {
+    backgroundColor: '#00ffcc',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 30,
+    gap: 8,
+  },
+  primaryButtonText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   header: {
     paddingTop: 50,
@@ -119,6 +239,24 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 1,
     borderColor: '#222',
+  },
+  addExerciseCardButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#333',
+    borderStyle: 'dashed',
+    marginBottom: 20,
+    gap: 10,
+  },
+  addExerciseCardText: {
+    color: '#00ffcc',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   exerciseHeader: {
     flexDirection: 'row',
@@ -160,6 +298,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+    padding: 4,
+    borderRadius: 8,
+  },
+  setRowCompleted: {
+    backgroundColor: 'rgba(0, 255, 204, 0.1)',
   },
   setNumberBadge: {
     width: 30,
@@ -200,6 +343,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 5,
   },
+  checkButtonActive: {
+    backgroundColor: '#00ffcc',
+  },
   addSetButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -238,4 +384,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#222',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  modalExerciseCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#222',
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 10,
+  }
 });

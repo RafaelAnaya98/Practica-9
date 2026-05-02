@@ -57,6 +57,13 @@ interface FitnessState {
   // Acciones (vacías o básicas por ahora ya que es solo UI)
   setRestTimerSeconds: (seconds: number) => void;
   toggleRestTimer: () => void;
+
+  // Acciones de Entrenamiento Activo
+  addExerciseToWorkout: (exercise: Exercise) => void;
+  removeExerciseFromWorkout: (workoutExerciseId: string) => void;
+  addSetToExercise: (workoutExerciseId: string) => void;
+  updateSet: (workoutExerciseId: string, setId: string, field: 'reps' | 'weight', value: string) => void;
+  toggleSetCompletion: (workoutExerciseId: string, setId: string) => void;
 }
 
 const mockExercises: Exercise[] = [
@@ -67,26 +74,8 @@ const mockExercises: Exercise[] = [
   { id: 'e5', name: 'Dominadas', muscle: 'Espalda', equipment: 'Peso Corporal', thumbnail: 'https://via.placeholder.com/150/121212/00ffcc?text=Dominadas' },
 ];
 
-const mockWorkout: WorkoutExercise[] = [
-  {
-    id: 'w1',
-    exercise: mockExercises[0],
-    sets: [
-      { id: 's1', reps: '10', weight: '60', completed: false },
-      { id: 's2', reps: '8', weight: '65', completed: false },
-      { id: 's3', reps: '6', weight: '70', completed: false },
-    ],
-  },
-  {
-    id: 'w2',
-    exercise: mockExercises[2],
-    sets: [
-      { id: 's4', reps: '12', weight: '20', completed: false },
-      { id: 's5', reps: '12', weight: '20', completed: false },
-      { id: 's6', reps: '10', weight: '25', completed: false },
-    ],
-  }
-];
+// currentWorkout starts empty
+const mockWorkout: WorkoutExercise[] = [];
 
 const mockHistory: PastWorkout[] = [
   { id: 'h1', date: 'Ayer', duration: '1h 15m', volume: 5400, muscles: ['Espalda', 'Bíceps'] },
@@ -112,6 +101,67 @@ export const useFitnessStore = create<FitnessState>()(
       
       setRestTimerSeconds: (seconds) => set({ restTimerSeconds: seconds }),
       toggleRestTimer: () => set((state) => ({ isRestTimerRunning: !state.isRestTimerRunning })),
+
+      addExerciseToWorkout: (exercise) => set((state) => ({
+        currentWorkout: [
+          ...state.currentWorkout,
+          {
+            id: Date.now().toString() + Math.random().toString(),
+            exercise,
+            sets: [{ id: Date.now().toString(), reps: '', weight: '', completed: false }]
+          }
+        ]
+      })),
+      
+      removeExerciseFromWorkout: (workoutExerciseId) => set((state) => ({
+        currentWorkout: state.currentWorkout.filter(w => w.id !== workoutExerciseId)
+      })),
+      
+      addSetToExercise: (workoutExerciseId) => set((state) => ({
+        currentWorkout: state.currentWorkout.map(workout => {
+          if (workout.id === workoutExerciseId) {
+            // copy previous set values if possible
+            const lastSet = workout.sets[workout.sets.length - 1];
+            return {
+              ...workout,
+              sets: [
+                ...workout.sets, 
+                { 
+                  id: Date.now().toString() + Math.random().toString(), 
+                  reps: lastSet ? lastSet.reps : '', 
+                  weight: lastSet ? lastSet.weight : '', 
+                  completed: false 
+                }
+              ]
+            };
+          }
+          return workout;
+        })
+      })),
+
+      updateSet: (workoutExerciseId, setId, field, value) => set((state) => ({
+        currentWorkout: state.currentWorkout.map(workout => {
+          if (workout.id === workoutExerciseId) {
+            return {
+              ...workout,
+              sets: workout.sets.map(set => set.id === setId ? { ...set, [field]: value } : set)
+            };
+          }
+          return workout;
+        })
+      })),
+
+      toggleSetCompletion: (workoutExerciseId, setId) => set((state) => ({
+        currentWorkout: state.currentWorkout.map(workout => {
+          if (workout.id === workoutExerciseId) {
+            return {
+              ...workout,
+              sets: workout.sets.map(set => set.id === setId ? { ...set, completed: !set.completed } : set)
+            };
+          }
+          return workout;
+        })
+      })),
     }),
     {
       name: 'fitness-storage',
