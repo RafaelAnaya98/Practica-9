@@ -1,9 +1,35 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFitnessStore } from '@/store/useStore';
 
+const PRESETS = [
+  { label: '30s', value: 30 },
+  { label: '1m', value: 60 },
+  { label: '1m 30s', value: 90 },
+  { label: '2m', value: 120 },
+  { label: '3m', value: 180 },
+];
+
 export default function RestScreen() {
   const { restTimerSeconds, isRestTimerRunning, toggleRestTimer, setRestTimerSeconds } = useFitnessStore();
+  const [initialTime, setInitialTime] = useState(90);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout | null = null;
+    
+    if (isRestTimerRunning && restTimerSeconds > 0) {
+      timeout = setTimeout(() => {
+        setRestTimerSeconds(restTimerSeconds - 1);
+      }, 1000);
+    } else if (restTimerSeconds === 0 && isRestTimerRunning) {
+      toggleRestTimer(); // Auto-pause when 0
+    }
+    
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [isRestTimerRunning, restTimerSeconds, setRestTimerSeconds, toggleRestTimer]);
 
   const formatTime = (totalSeconds: number) => {
     const minutes = Math.floor(totalSeconds / 60);
@@ -12,7 +38,31 @@ export default function RestScreen() {
   };
 
   const addTime = (amount: number) => {
-    setRestTimerSeconds(Math.max(0, restTimerSeconds + amount));
+    const newTime = Math.max(0, restTimerSeconds + amount);
+    setRestTimerSeconds(newTime);
+    setInitialTime(newTime);
+  };
+
+  const setPreset = (seconds: number) => {
+    setInitialTime(seconds);
+    setRestTimerSeconds(seconds);
+    if (isRestTimerRunning) {
+      toggleRestTimer();
+    }
+  };
+
+  const restartTimer = () => {
+    setRestTimerSeconds(initialTime);
+    if (!isRestTimerRunning && initialTime > 0) {
+      toggleRestTimer();
+    }
+  };
+
+  const skipTimer = () => {
+    setRestTimerSeconds(0);
+    if (isRestTimerRunning) {
+      toggleRestTimer();
+    }
   };
 
   return (
@@ -22,37 +72,67 @@ export default function RestScreen() {
       </View>
 
       <View style={styles.timerContainer}>
+        
+        <View style={styles.presetsWrapper}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            contentContainerStyle={styles.presetsContainer}
+          >
+            {PRESETS.map((preset) => (
+              <TouchableOpacity 
+                key={preset.value} 
+                style={[styles.presetButton, initialTime === preset.value && styles.presetButtonActive]}
+                onPress={() => setPreset(preset.value)}
+              >
+                <Text style={[styles.presetText, initialTime === preset.value && styles.presetTextActive]}>
+                  {preset.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
         <View style={styles.circleOuter}>
           <View style={styles.circleInner}>
-            <Text style={styles.timerText}>{formatTime(restTimerSeconds)}</Text>
+            <Text style={[styles.timerText, restTimerSeconds === 0 && styles.timerTextDone]}>
+              {formatTime(restTimerSeconds)}
+            </Text>
           </View>
         </View>
 
         <View style={styles.controlsRow}>
-          <TouchableOpacity style={styles.adjustButton} onPress={() => addTime(-30)}>
-            <Text style={styles.adjustText}>-30s</Text>
-          </TouchableOpacity>
-          
           <TouchableOpacity style={styles.adjustButton} onPress={() => addTime(30)}>
             <Text style={styles.adjustText}>+30s</Text>
           </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.adjustButton} onPress={() => addTime(60)}>
+            <Text style={styles.adjustText}>+1m</Text>
+          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity 
-          style={[styles.playButton, isRestTimerRunning ? styles.pauseButton : null]} 
-          onPress={toggleRestTimer}
-        >
-          <Ionicons 
-            name={isRestTimerRunning ? "pause" : "play"} 
-            size={32} 
-            color="#000" 
-            style={{ marginLeft: isRestTimerRunning ? 0 : 4 }} 
-          />
-        </TouchableOpacity>
+        <View style={styles.mainControlsRow}>
+          <TouchableOpacity style={styles.secondaryButton} onPress={restartTimer}>
+            <Ionicons name="refresh" size={24} color="#fff" />
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.skipButton}>
-          <Text style={styles.skipText}>Saltar Descanso</Text>
-        </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.playButton, isRestTimerRunning ? styles.pauseButton : null]} 
+            onPress={toggleRestTimer}
+          >
+            <Ionicons 
+              name={isRestTimerRunning ? "pause" : "play"} 
+              size={36} 
+              color="#000" 
+              style={{ marginLeft: isRestTimerRunning ? 0 : 4 }} 
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.secondaryButton} onPress={skipTimer}>
+            <Ionicons name="play-skip-forward" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+
       </View>
     </View>
   );
@@ -81,6 +161,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
+  },
+  presetsWrapper: {
+    height: 50,
+    marginBottom: 40,
+  },
+  presetsContainer: {
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    gap: 12,
+  },
+  presetButton: {
+    backgroundColor: '#222',
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#333',
+    height: 40,
+    justifyContent: 'center',
+  },
+  presetButtonActive: {
+    backgroundColor: 'rgba(0, 255, 204, 0.1)',
+    borderColor: '#00ffcc',
+  },
+  presetText: {
+    color: '#888',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  presetTextActive: {
+    color: '#00ffcc',
   },
   circleOuter: {
     width: 280,
@@ -111,6 +221,9 @@ const styles = StyleSheet.create({
     color: '#00ffcc',
     fontVariant: ['tabular-nums'],
   },
+  timerTextDone: {
+    color: '#ffcc00',
+  },
   controlsRow: {
     flexDirection: 'row',
     gap: 20,
@@ -127,6 +240,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  mainControlsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 30,
+    width: '100%',
+  },
+  secondaryButton: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#222',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   playButton: {
     width: 80,
     height: 80,
@@ -134,7 +262,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#00ffcc',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
     shadowColor: '#00ffcc',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -144,13 +271,5 @@ const styles = StyleSheet.create({
   pauseButton: {
     backgroundColor: '#ffcc00',
     shadowColor: '#ffcc00',
-  },
-  skipButton: {
-    padding: 15,
-  },
-  skipText: {
-    color: '#888',
-    fontSize: 16,
-    fontWeight: '600',
   },
 });
