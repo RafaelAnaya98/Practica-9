@@ -1,35 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFitnessStore } from '@/store/useStore';
+import { useRestTimer } from '@/hooks/useRestTimer';
 
 const PRESETS = [
   { label: '30s', value: 30 },
   { label: '1m', value: 60 },
   { label: '1m 30s', value: 90 },
   { label: '2m', value: 120 },
-  { label: '3m', value: 180 },
 ];
 
 export default function RestScreen() {
-  const { restTimerSeconds, isRestTimerRunning, toggleRestTimer, setRestTimerSeconds } = useFitnessStore();
-  const [initialTime, setInitialTime] = useState(90);
+  const { 
+    restTimerSeconds, 
+    isRestTimerRunning, 
+    lastUsedRestTime,
+    startTimer,
+    resetTimer,
+    skipTimer,
+    addTime,
+    toggleRestTimer
+  } = useRestTimer();
 
-  useEffect(() => {
-    let timeout: NodeJS.Timeout | null = null;
-    
-    if (isRestTimerRunning && restTimerSeconds > 0) {
-      timeout = setTimeout(() => {
-        setRestTimerSeconds(restTimerSeconds - 1);
-      }, 1000);
-    } else if (restTimerSeconds === 0 && isRestTimerRunning) {
-      toggleRestTimer(); // Auto-pause when 0
-    }
-    
-    return () => {
-      if (timeout) clearTimeout(timeout);
-    };
-  }, [isRestTimerRunning, restTimerSeconds, setRestTimerSeconds, toggleRestTimer]);
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [customMin, setCustomMin] = useState('');
+  const [customSec, setCustomSec] = useState('');
 
   const formatTime = (totalSeconds: number) => {
     const minutes = Math.floor(totalSeconds / 60);
@@ -37,33 +32,19 @@ export default function RestScreen() {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const addTime = (amount: number) => {
-    const newTime = Math.max(0, restTimerSeconds + amount);
-    setRestTimerSeconds(newTime);
-    setInitialTime(newTime);
+  const handleCustomSubmit = () => {
+    const m = parseInt(customMin || '0', 10);
+    const s = parseInt(customSec || '0', 10);
+    const total = m * 60 + s;
+    if (total > 0) {
+      startTimer(total);
+    }
+    setModalVisible(false);
+    setCustomMin('');
+    setCustomSec('');
   };
 
-  const setPreset = (seconds: number) => {
-    setInitialTime(seconds);
-    setRestTimerSeconds(seconds);
-    if (isRestTimerRunning) {
-      toggleRestTimer();
-    }
-  };
-
-  const restartTimer = () => {
-    setRestTimerSeconds(initialTime);
-    if (!isRestTimerRunning && initialTime > 0) {
-      toggleRestTimer();
-    }
-  };
-
-  const skipTimer = () => {
-    setRestTimerSeconds(0);
-    if (isRestTimerRunning) {
-      toggleRestTimer();
-    }
-  };
+  const progress = lastUsedRestTime > 0 ? Math.min(100, (restTimerSeconds / lastUsedRestTime) * 100) : 0;
 
   return (
     <View style={styles.container}>
@@ -82,14 +63,23 @@ export default function RestScreen() {
             {PRESETS.map((preset) => (
               <TouchableOpacity 
                 key={preset.value} 
-                style={[styles.presetButton, initialTime === preset.value && styles.presetButtonActive]}
-                onPress={() => setPreset(preset.value)}
+                style={[styles.presetButton, lastUsedRestTime === preset.value && styles.presetButtonActive]}
+                onPress={() => startTimer(preset.value)}
               >
-                <Text style={[styles.presetText, initialTime === preset.value && styles.presetTextActive]}>
+                <Text style={[styles.presetText, lastUsedRestTime === preset.value && styles.presetTextActive]}>
                   {preset.label}
                 </Text>
               </TouchableOpacity>
             ))}
+            
+            <TouchableOpacity 
+              style={[styles.presetButton, !PRESETS.find(p => p.value === lastUsedRestTime) && styles.presetButtonActive]}
+              onPress={() => setModalVisible(true)}
+            >
+              <Text style={[styles.presetText, !PRESETS.find(p => p.value === lastUsedRestTime) && styles.presetTextActive]}>
+                Personalizado
+              </Text>
+            </TouchableOpacity>
           </ScrollView>
         </View>
 
@@ -99,6 +89,10 @@ export default function RestScreen() {
               {formatTime(restTimerSeconds)}
             </Text>
           </View>
+        </View>
+
+        <View style={styles.progressContainer}>
+          <View style={[styles.progressBar, { width: `${progress}%` }]} />
         </View>
 
         <View style={styles.controlsRow}>
@@ -112,7 +106,7 @@ export default function RestScreen() {
         </View>
 
         <View style={styles.mainControlsRow}>
-          <TouchableOpacity style={styles.secondaryButton} onPress={restartTimer}>
+          <TouchableOpacity style={styles.secondaryButton} onPress={resetTimer}>
             <Ionicons name="refresh" size={24} color="#fff" />
           </TouchableOpacity>
 
@@ -134,6 +128,53 @@ export default function RestScreen() {
         </View>
 
       </View>
+
+      <Modal visible={isModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Tiempo Personalizado</Text>
+            
+            <View style={styles.inputRow}>
+              <View style={styles.inputGroup}>
+                <TextInput
+                  style={styles.input}
+                  keyboardType="numeric"
+                  value={customMin}
+                  onChangeText={setCustomMin}
+                  placeholder="0"
+                  placeholderTextColor="#555"
+                  maxLength={2}
+                />
+                <Text style={styles.inputLabel}>Min</Text>
+              </View>
+              
+              <Text style={styles.colon}>:</Text>
+
+              <View style={styles.inputGroup}>
+                <TextInput
+                  style={styles.input}
+                  keyboardType="numeric"
+                  value={customSec}
+                  onChangeText={setCustomSec}
+                  placeholder="0"
+                  placeholderTextColor="#555"
+                  maxLength={2}
+                />
+                <Text style={styles.inputLabel}>Seg</Text>
+              </View>
+            </View>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalButtonCancel} onPress={() => setModalVisible(false)}>
+                <Text style={styles.modalButtonTextCancel}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalButtonSubmit} onPress={handleCustomSubmit}>
+                <Text style={styles.modalButtonTextSubmit}>Iniciar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -200,7 +241,7 @@ const styles = StyleSheet.create({
     borderColor: '#333',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 40,
+    marginBottom: 30,
   },
   circleInner: {
     width: 250,
@@ -223,6 +264,19 @@ const styles = StyleSheet.create({
   },
   timerTextDone: {
     color: '#ffcc00',
+  },
+  progressContainer: {
+    width: 250,
+    height: 8,
+    backgroundColor: '#222',
+    borderRadius: 4,
+    marginBottom: 40,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#00ffcc',
+    borderRadius: 4,
   },
   controlsRow: {
     flexDirection: 'row',
@@ -271,5 +325,90 @@ const styles = StyleSheet.create({
   pauseButton: {
     backgroundColor: '#ffcc00',
     shadowColor: '#ffcc00',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    padding: 30,
+    width: '80%',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  modalTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 25,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  inputGroup: {
+    alignItems: 'center',
+  },
+  input: {
+    backgroundColor: '#222',
+    color: '#00ffcc',
+    fontSize: 32,
+    fontWeight: 'bold',
+    width: 80,
+    height: 70,
+    borderRadius: 12,
+    textAlign: 'center',
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  inputLabel: {
+    color: '#888',
+    marginTop: 8,
+    fontSize: 14,
+  },
+  colon: {
+    color: '#fff',
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginHorizontal: 15,
+    marginBottom: 20,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+    gap: 15,
+  },
+  modalButtonCancel: {
+    flex: 1,
+    paddingVertical: 15,
+    borderRadius: 12,
+    backgroundColor: '#333',
+    alignItems: 'center',
+    marginRight: 7.5,
+  },
+  modalButtonTextCancel: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  modalButtonSubmit: {
+    flex: 1,
+    paddingVertical: 15,
+    borderRadius: 12,
+    backgroundColor: '#00ffcc',
+    alignItems: 'center',
+    marginLeft: 7.5,
+  },
+  modalButtonTextSubmit: {
+    color: '#000',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

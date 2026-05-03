@@ -1,29 +1,94 @@
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ScrollView, Image, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFitnessStore } from '@/store/useStore';
+import { useFitnessStore, Exercise } from '@/store/useStore';
 
-const FILTERS = ['Todos', 'Pecho', 'Espalda', 'Piernas', 'Brazos', 'Mancuernas', 'Barra'];
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+const FILTERS = ['Todos', 'Pecho', 'Espalda', 'Piernas', 'Hombros', 'Brazos', 'Core'];
 
 export default function ExercisesScreen() {
   const { exercises } = useFitnessStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('Todos');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const renderExerciseItem = ({ item }: { item: any }) => (
-    <TouchableOpacity style={styles.exerciseCard}>
-      <Image source={{ uri: item.thumbnail }} style={styles.thumbnail} />
-      <View style={styles.exerciseInfo}>
-        <Text style={styles.exerciseName}>{item.name}</Text>
-        <View style={styles.tagsRow}>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>{item.muscle}</Text>
+  const filteredExercises = useMemo(() => {
+    return exercises.filter((ex) => {
+      const matchesSearch = ex.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            ex.muscle.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesFilter = activeFilter === 'Todos' || ex.muscle === activeFilter;
+      return matchesSearch && matchesFilter;
+    });
+  }, [exercises, searchQuery, activeFilter]);
+
+  const toggleExpand = (id: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedId(expandedId === id ? null : id);
+  };
+
+  const renderExerciseItem = ({ item }: { item: Exercise }) => {
+    const isExpanded = expandedId === item.id;
+    
+    return (
+      <TouchableOpacity 
+        style={styles.exerciseCard} 
+        activeOpacity={0.8}
+        onPress={() => toggleExpand(item.id)}
+      >
+        <View style={styles.cardHeader}>
+          <Image source={{ uri: item.thumbnail }} style={styles.thumbnail} />
+          <View style={styles.exerciseInfo}>
+            <Text style={styles.exerciseName}>{item.name}</Text>
+            <View style={styles.tagsRow}>
+              <View style={styles.tag}>
+                <Text style={styles.tagText}>{item.muscle}</Text>
+              </View>
+              <View style={styles.tag}>
+                <Text style={styles.tagText}>{item.equipment}</Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>{item.equipment}</Text>
-          </View>
+          <Ionicons 
+            name={isExpanded ? "chevron-up" : "chevron-down"} 
+            size={20} 
+            color="#555" 
+          />
         </View>
-      </View>
-      <Ionicons name="chevron-forward" size={20} color="#555" />
-    </TouchableOpacity>
-  );
+
+        {isExpanded && (
+          <View style={styles.expandedContent}>
+            <Text style={styles.description}>{item.description}</Text>
+            
+            <View style={styles.detailsGrid}>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Nivel</Text>
+                <Text style={styles.detailValue}>{item.level}</Text>
+              </View>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Músculos Principales</Text>
+                <Text style={styles.detailValue}>{item.primaryMuscles?.join(', ')}</Text>
+              </View>
+            </View>
+
+            {item.secondaryMuscles && item.secondaryMuscles.length > 0 && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Músculos Secundarios:</Text>
+                <Text style={styles.detailValueLine}>{item.secondaryMuscles.join(', ')}</Text>
+              </View>
+            )}
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Beneficios:</Text>
+              <Text style={styles.detailValueLine}>{item.benefits}</Text>
+            </View>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -36,33 +101,51 @@ export default function ExercisesScreen() {
             style={styles.searchInput}
             placeholder="Buscar ejercicio..."
             placeholderTextColor="#888"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
           />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={20} color="#888" />
+            </TouchableOpacity>
+          )}
         </View>
 
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
           style={styles.filtersContainer}
+          contentContainerStyle={styles.filtersContent}
         >
-          {FILTERS.map((filter, index) => (
-            <TouchableOpacity 
-              key={filter} 
-              style={[styles.filterChip, index === 0 ? styles.filterChipActive : null]}
-            >
-              <Text style={[styles.filterText, index === 0 ? styles.filterTextActive : null]}>
-                {filter}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {FILTERS.map((filter) => {
+            const isActive = activeFilter === filter;
+            return (
+              <TouchableOpacity 
+                key={filter} 
+                style={[styles.filterChip, isActive && styles.filterChipActive]}
+                onPress={() => setActiveFilter(filter)}
+              >
+                <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
+                  {filter}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </View>
 
       <FlatList
-        data={exercises}
+        data={filteredExercises}
         keyExtractor={(item) => item.id}
         renderItem={renderExerciseItem}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Ionicons name="barbell-outline" size={48} color="#333" />
+            <Text style={styles.emptyText}>No se encontraron ejercicios</Text>
+          </View>
+        }
       />
     </View>
   );
@@ -94,26 +177,29 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 15,
     marginBottom: 15,
+    height: 44,
   },
   searchIcon: {
     marginRight: 10,
   },
   searchInput: {
     flex: 1,
-    height: 44,
+    height: '100%',
     color: '#fff',
     fontSize: 16,
   },
   filtersContainer: {
-    paddingHorizontal: 20,
     marginBottom: 15,
+  },
+  filtersContent: {
+    paddingHorizontal: 20,
+    gap: 10,
   },
   filterChip: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     backgroundColor: '#222',
     borderRadius: 20,
-    marginRight: 10,
     borderWidth: 1,
     borderColor: '#333',
   },
@@ -130,22 +216,27 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 20,
+    paddingBottom: 40,
   },
   exerciseCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#121212',
     borderRadius: 16,
     padding: 15,
     marginBottom: 15,
     borderWidth: 1,
     borderColor: '#222',
+    overflow: 'hidden',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   thumbnail: {
     width: 60,
     height: 60,
     borderRadius: 12,
     marginRight: 15,
+    backgroundColor: '#222',
   },
   exerciseInfo: {
     flex: 1,
@@ -170,5 +261,55 @@ const styles = StyleSheet.create({
     color: '#00ffcc',
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  expandedContent: {
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#222',
+  },
+  description: {
+    color: '#ccc',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 15,
+  },
+  detailsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    gap: 15,
+  },
+  detailItem: {
+    flex: 1,
+  },
+  detailRow: {
+    marginBottom: 12,
+  },
+  detailLabel: {
+    color: '#888',
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  detailValue: {
+    color: '#fff',
+    fontSize: 13,
+  },
+  detailValueLine: {
+    color: '#fff',
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 50,
+  },
+  emptyText: {
+    color: '#555',
+    fontSize: 16,
+    marginTop: 10,
   },
 });
