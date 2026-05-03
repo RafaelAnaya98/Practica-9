@@ -1,40 +1,86 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFitnessStore } from '@/store/useStore';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
-  const { userStats } = useFitnessStore();
+  const router = useRouter();
+  const { currentWorkout, history, isRestTimerRunning, restTimerSeconds, exercises } = useFitnessStore();
+
+  const isWorkoutActive = currentWorkout.length > 0;
+  const entrenarSummary = isWorkoutActive ? `${currentWorkout.length} ej. activos` : 'Sin iniciar';
+
+  const lastWorkout = history.length > 0 ? history[0].date : 'Sin registros';
+
+  const formatTime = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+  const descansoSummary = isRestTimerRunning ? `${formatTime(restTimerSeconds)}` : 'Inactivo';
+
+  const ejerciciosSummary = `${exercises.length} rutinas`; // Or exercises, but keeping it brief
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <Text style={styles.greeting}>Hola, Atleta</Text>
-        <Text style={styles.subtitle}>Listo para destruir tus límites?</Text>
+        <Text style={styles.subtitle}>¿Listo para destruir tus límites?</Text>
       </View>
 
       <View style={styles.grid}>
-        <View style={[styles.card, styles.cardAccent]}>
-          <Ionicons name="flame" size={24} color="#000" />
-          <Text style={styles.cardTitleBlack}>Racha Actual</Text>
-          <Text style={styles.cardValueBlack}>{userStats.streak} días</Text>
-        </View>
+        {/* Card 1: Entrenar */}
+        <TouchableOpacity 
+          style={[styles.card, isWorkoutActive && styles.cardAccent]} 
+          onPress={() => router.navigate('/workout')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="barbell" size={24} color={isWorkoutActive ? "#000" : "#00ffcc"} />
+          <Text style={isWorkoutActive ? styles.cardTitleBlack : styles.cardTitle}>Entrenar</Text>
+          <Text style={isWorkoutActive ? styles.cardValueBlack : styles.cardValue}>{entrenarSummary}</Text>
+        </TouchableOpacity>
 
-        <View style={styles.card}>
-          <Ionicons name="calendar" size={24} color="#00ffcc" />
-          <Text style={styles.cardTitle}>Último Entrenamiento</Text>
-          <Text style={styles.cardValue}>{userStats.lastWorkoutDate}</Text>
-        </View>
+        {/* Card 2: Historial */}
+        <TouchableOpacity 
+          style={styles.card} 
+          onPress={() => router.navigate('/history')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="time" size={24} color="#00ffcc" />
+          <Text style={styles.cardTitle}>Último entreno</Text>
+          <Text style={styles.cardValue}>{lastWorkout}</Text>
+        </TouchableOpacity>
 
-        <View style={[styles.card, { width: '100%' }]}>
-          <Ionicons name="body" size={24} color="#00ffcc" />
-          <Text style={styles.cardTitle}>Descanso Recomendado</Text>
-          <Text style={styles.cardValue}>{userStats.recommendedRest}</Text>
-        </View>
+        {/* Card 3: Descanso */}
+        <TouchableOpacity 
+          style={[styles.card, isRestTimerRunning && styles.cardAccent]} 
+          onPress={() => router.navigate('/rest')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="timer" size={24} color={isRestTimerRunning ? "#000" : "#00ffcc"} />
+          <Text style={isRestTimerRunning ? styles.cardTitleBlack : styles.cardTitle}>Descanso</Text>
+          <Text style={isRestTimerRunning ? styles.cardValueBlack : styles.cardValue}>{descansoSummary}</Text>
+        </TouchableOpacity>
+
+        {/* Card 4: Ejercicios */}
+        <TouchableOpacity 
+          style={styles.card} 
+          onPress={() => router.navigate('/exercises')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="library" size={24} color="#00ffcc" />
+          <Text style={styles.cardTitle}>Ejercicios</Text>
+          <Text style={styles.cardValue}>{exercises.length} disp.</Text>
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.primaryButton}>
+      <TouchableOpacity 
+        style={styles.primaryButton}
+        onPress={() => router.navigate('/workout')}
+        activeOpacity={0.8}
+      >
         <Ionicons name="play" size={20} color="#000" />
-        <Text style={styles.buttonText}>Comenzar Entrenamiento</Text>
+        <Text style={styles.buttonText}>{isWorkoutActive ? 'Continuar Entrenamiento' : 'Comenzar Entrenamiento'}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
