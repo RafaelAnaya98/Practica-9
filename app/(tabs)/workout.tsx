@@ -12,7 +12,8 @@ export default function WorkoutScreen() {
     removeExerciseFromWorkout,
     addSetToExercise,
     updateSet,
-    toggleSetCompletion
+    toggleSetCompletion,
+    finishWorkout
   } = useFitnessStore();
 
   const [isModalVisible, setModalVisible] = useState(false);
@@ -159,7 +160,7 @@ export default function WorkoutScreen() {
       </ScrollView>
 
       <View style={styles.floatingAction}>
-        <TouchableOpacity style={styles.finishButton}>
+        <TouchableOpacity style={styles.finishButton} onPress={finishWorkout}>
           <Text style={styles.finishButtonText}>Terminar Entrenamiento</Text>
         </TouchableOpacity>
       </View>

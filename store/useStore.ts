@@ -29,6 +29,7 @@ export interface PastWorkout {
   duration: string;
   volume: number;
   muscles: string[];
+  exercises: WorkoutExercise[];
 }
 
 export interface UserStats {
@@ -64,6 +65,9 @@ interface FitnessState {
   addSetToExercise: (workoutExerciseId: string) => void;
   updateSet: (workoutExerciseId: string, setId: string, field: 'reps' | 'weight', value: string) => void;
   toggleSetCompletion: (workoutExerciseId: string, setId: string) => void;
+  finishWorkout: () => void;
+  
+  workoutStartTime: number | null;
 }
 
 const mockExercises: Exercise[] = [
@@ -77,11 +81,7 @@ const mockExercises: Exercise[] = [
 // currentWorkout starts empty
 const mockWorkout: WorkoutExercise[] = [];
 
-const mockHistory: PastWorkout[] = [
-  { id: 'h1', date: 'Ayer', duration: '1h 15m', volume: 5400, muscles: ['Espalda', 'Bíceps'] },
-  { id: 'h2', date: 'Hace 3 días', duration: '1h 05m', volume: 4800, muscles: ['Piernas', 'Hombros'] },
-  { id: 'h3', date: 'Hace 5 días', duration: '1h 20m', volume: 6100, muscles: ['Pecho', 'Tríceps'] },
-];
+const mockHistory: PastWorkout[] = [];
 
 const mockStats: UserStats = {
   lastWorkoutDate: 'Ayer',
@@ -96,6 +96,7 @@ export const useFitnessStore = create<FitnessState>()(
       history: mockHistory,
       userStats: mockStats,
       currentWorkout: mockWorkout,
+      workoutStartTime: null,
       restTimerSeconds: 90, // 1:30 min por defecto
       isRestTimerRunning: false,
       
@@ -103,6 +104,7 @@ export const useFitnessStore = create<FitnessState>()(
       toggleRestTimer: () => set((state) => ({ isRestTimerRunning: !state.isRestTimerRunning })),
 
       addExerciseToWorkout: (exercise) => set((state) => ({
+        workoutStartTime: state.workoutStartTime || Date.now(),
         currentWorkout: [
           ...state.currentWorkout,
           {
@@ -162,6 +164,45 @@ export const useFitnessStore = create<FitnessState>()(
           return workout;
         })
       })),
+
+      finishWorkout: () => set((state) => {
+        if (state.currentWorkout.length === 0) return state;
+        
+        let volume = 0;
+        const muscles = new Set<string>();
+        
+        state.currentWorkout.forEach(item => {
+          muscles.add(item.exercise.muscle);
+          item.sets.forEach(set => {
+            if (set.completed && set.weight && set.reps) {
+              volume += parseFloat(set.weight) * parseInt(set.reps, 10);
+            }
+          });
+        });
+
+        const endTime = Date.now();
+        const startTime = state.workoutStartTime || endTime;
+        const diffMs = endTime - startTime;
+        const diffMins = Math.floor(diffMs / 60000);
+        const hours = Math.floor(diffMins / 60);
+        const mins = diffMins % 60;
+        const duration = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+
+        const newWorkout: PastWorkout = {
+          id: Date.now().toString(),
+          date: new Date().toLocaleDateString(),
+          duration: duration,
+          volume: volume,
+          muscles: Array.from(muscles),
+          exercises: [...state.currentWorkout],
+        };
+
+        return {
+          history: [newWorkout, ...state.history],
+          currentWorkout: [],
+          workoutStartTime: null,
+        };
+      }),
     }),
     {
       name: 'fitness-storage',
