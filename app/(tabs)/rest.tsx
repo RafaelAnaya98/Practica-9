@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRestTimer } from '@/hooks/useRestTimer';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const PRESETS = [
   { label: '30s', value: 30 },
@@ -11,9 +11,9 @@ const PRESETS = [
 ];
 
 export default function RestScreen() {
-  const { 
-    restTimerSeconds, 
-    isRestTimerRunning, 
+  const {
+    restTimerSeconds,
+    isRestTimerRunning,
     lastUsedRestTime,
     startTimer,
     resetTimer,
@@ -48,21 +48,19 @@ export default function RestScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Descanso</Text>
-      </View>
+
 
       <View style={styles.timerContainer}>
-        
+
         <View style={styles.presetsWrapper}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.presetsContainer}
           >
             {PRESETS.map((preset) => (
-              <TouchableOpacity 
-                key={preset.value} 
+              <TouchableOpacity
+                key={preset.value}
                 style={[styles.presetButton, lastUsedRestTime === preset.value && styles.presetButtonActive]}
                 onPress={() => startTimer(preset.value)}
               >
@@ -71,8 +69,8 @@ export default function RestScreen() {
                 </Text>
               </TouchableOpacity>
             ))}
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.presetButton, !PRESETS.find(p => p.value === lastUsedRestTime) && styles.presetButtonActive]}
               onPress={() => setModalVisible(true)}
             >
@@ -99,7 +97,7 @@ export default function RestScreen() {
           <TouchableOpacity style={styles.adjustButton} onPress={() => addTime(30)}>
             <Text style={styles.adjustText}>+30s</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity style={styles.adjustButton} onPress={() => addTime(60)}>
             <Text style={styles.adjustText}>+1m</Text>
           </TouchableOpacity>
@@ -110,15 +108,15 @@ export default function RestScreen() {
             <Ionicons name="refresh" size={24} color="#fff" />
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.playButton, isRestTimerRunning ? styles.pauseButton : null]} 
+          <TouchableOpacity
+            style={[styles.playButton, isRestTimerRunning ? styles.pauseButton : null]}
             onPress={toggleRestTimer}
           >
-            <Ionicons 
-              name={isRestTimerRunning ? "pause" : "play"} 
-              size={36} 
-              color="#000" 
-              style={{ marginLeft: isRestTimerRunning ? 0 : 4 }} 
+            <Ionicons
+              name={isRestTimerRunning ? "pause" : "play"}
+              size={36}
+              color="#000"
+              style={{ marginLeft: isRestTimerRunning ? 0 : 4 }}
             />
           </TouchableOpacity>
 
@@ -133,7 +131,7 @@ export default function RestScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Tiempo Personalizado</Text>
-            
+
             <View style={styles.inputRow}>
               <View style={styles.inputGroup}>
                 <TextInput
@@ -147,7 +145,7 @@ export default function RestScreen() {
                 />
                 <Text style={styles.inputLabel}>Min</Text>
               </View>
-              
+
               <Text style={styles.colon}>:</Text>
 
               <View style={styles.inputGroup}>
@@ -200,12 +198,12 @@ const styles = StyleSheet.create({
   timerContainer: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
+    justifyContent: 'space-evenly',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
   },
   presetsWrapper: {
     height: 50,
-    marginBottom: 40,
   },
   presetsContainer: {
     alignItems: 'center',
@@ -234,19 +232,18 @@ const styles = StyleSheet.create({
     color: '#00ffcc',
   },
   circleOuter: {
-    width: 280,
-    height: 280,
-    borderRadius: 140,
+    width: 250,
+    height: 250,
+    borderRadius: 125,
     borderWidth: 4,
     borderColor: '#333',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 30,
   },
   circleInner: {
-    width: 250,
-    height: 250,
-    borderRadius: 125,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
     backgroundColor: '#121212',
     alignItems: 'center',
     justifyContent: 'center',
@@ -257,7 +254,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   timerText: {
-    fontSize: 64,
+    fontSize: 56,
     fontWeight: 'bold',
     color: '#00ffcc',
     fontVariant: ['tabular-nums'],
@@ -266,11 +263,10 @@ const styles = StyleSheet.create({
     color: '#ffcc00',
   },
   progressContainer: {
-    width: 250,
+    width: 220,
     height: 8,
     backgroundColor: '#222',
     borderRadius: 4,
-    marginBottom: 40,
     overflow: 'hidden',
   },
   progressBar: {
@@ -281,7 +277,6 @@ const styles = StyleSheet.create({
   controlsRow: {
     flexDirection: 'row',
     gap: 20,
-    marginBottom: 40,
   },
   adjustButton: {
     backgroundColor: '#222',

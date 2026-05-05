@@ -69,7 +69,7 @@ export default function WorkoutScreen() {
   if (currentWorkout.length === 0) {
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.emptyContainer}>
-        <Ionicons name="barbell-outline" size={60} color="#333" style={{ marginTop: 40 }} />
+        <Ionicons name="barbell-outline" size={60} color="#333" style={{ marginTop: 10 }} />
         <Text style={styles.emptyTitle}>¿Qué entrenamos hoy?</Text>
         
         <View style={styles.infoBox}>
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   header: {
-    paddingTop: 50,
+    paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 20,
     backgroundColor: '#121212',

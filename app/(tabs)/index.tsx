@@ -1,7 +1,7 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useFitnessStore } from '@/store/useStore';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -30,7 +30,7 @@ export default function HomeScreen() {
 
       <View style={styles.infoBox}>
         <Ionicons name="information-circle-outline" size={24} color="#00ffcc" />
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1 }}>
           <Text style={styles.infoTitle}>¿Cómo empezar?</Text>
           <Text style={styles.infoText}>Usa 'Entrenar' para iniciar tu rutina. Revisa tus ejercicios y registra tu progreso en las otras secciones.</Text>
         </View>
@@ -38,8 +38,8 @@ export default function HomeScreen() {
 
       <View style={styles.grid}>
         {/* Card 1: Entrenar */}
-        <TouchableOpacity 
-          style={[styles.card, isWorkoutActive && styles.cardAccent]} 
+        <TouchableOpacity
+          style={[styles.card, isWorkoutActive && styles.cardAccent]}
           onPress={() => router.navigate('/workout')}
           activeOpacity={0.8}
         >
@@ -49,8 +49,8 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         {/* Card 2: Historial */}
-        <TouchableOpacity 
-          style={styles.card} 
+        <TouchableOpacity
+          style={styles.card}
           onPress={() => router.navigate('/history')}
           activeOpacity={0.8}
         >
@@ -60,8 +60,8 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         {/* Card 3: Descanso */}
-        <TouchableOpacity 
-          style={[styles.card, isRestTimerRunning && styles.cardAccent]} 
+        <TouchableOpacity
+          style={[styles.card, isRestTimerRunning && styles.cardAccent]}
           onPress={() => router.navigate('/rest')}
           activeOpacity={0.8}
         >
@@ -71,8 +71,8 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         {/* Card 4: Ejercicios */}
-        <TouchableOpacity 
-          style={styles.card} 
+        <TouchableOpacity
+          style={styles.card}
           onPress={() => router.navigate('/exercises')}
           activeOpacity={0.8}
         >
@@ -82,8 +82,8 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         {/* Card 5: Progreso */}
-        <TouchableOpacity 
-          style={styles.card} 
+        <TouchableOpacity
+          style={styles.card}
           onPress={() => router.navigate('/progress')}
           activeOpacity={0.8}
         >
@@ -93,7 +93,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.primaryButton}
         onPress={() => router.navigate('/workout')}
         activeOpacity={0.8}
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   header: {
-    marginTop: 40,
+    marginTop: 20,
     marginBottom: 30,
   },
   greeting: {

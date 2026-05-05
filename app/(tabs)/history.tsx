@@ -1,7 +1,7 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { PastWorkout, useFitnessStore, WorkoutExercise } from '@/store/useStore';
 import { Ionicons } from '@expo/vector-icons';
-import { useFitnessStore, PastWorkout, WorkoutExercise } from '@/store/useStore';
 import { useState } from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const HistoryCard = ({ item }: { item: PastWorkout }) => {
   const [expanded, setExpanded] = useState(false);
@@ -19,7 +19,7 @@ const HistoryCard = ({ item }: { item: PastWorkout }) => {
         <Text style={styles.workoutTitle}>
           {item.name ? item.name : (item.muscles && item.muscles.length > 0 ? item.muscles.join(', ') : 'Entrenamiento general')}
         </Text>
-        
+
         {item.name && item.muscles && item.muscles.length > 0 && (
           <Text style={styles.workoutSubtitle}>
             Músculos: {item.muscles.join(', ')}
@@ -42,7 +42,7 @@ const HistoryCard = ({ item }: { item: PastWorkout }) => {
           {item.exercises.map((workoutExercise: WorkoutExercise, index: number) => (
             <View key={workoutExercise.id || index} style={styles.exerciseDetail}>
               <Text style={styles.exerciseDetailName}>{workoutExercise.exercise.name}</Text>
-              
+
               <View style={styles.setsContainer}>
                 <View style={styles.setHeaderRow}>
                   <Text style={[styles.setHeaderText, { width: 40 }]}>Set</Text>
@@ -50,7 +50,7 @@ const HistoryCard = ({ item }: { item: PastWorkout }) => {
                   <Text style={[styles.setHeaderText, { flex: 1, textAlign: 'center' }]}>Reps</Text>
                   <Text style={[styles.setHeaderText, { width: 40, textAlign: 'center' }]}>✓</Text>
                 </View>
-                
+
                 {workoutExercise.sets.map((set, setIndex) => (
                   <View key={set.id || setIndex} style={styles.setRow}>
                     <Text style={[styles.setText, { width: 40 }]}>{setIndex + 1}</Text>
@@ -79,14 +79,12 @@ export default function HistoryScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Historial</Text>
-      </View>
+
 
       <View style={styles.infoWrapper}>
         <View style={styles.infoBox}>
           <Ionicons name="information-circle-outline" size={24} color="#00ffcc" />
-          <View style={{flex: 1}}>
+          <View style={{ flex: 1 }}>
             <Text style={styles.infoTitle}>Tus Entrenamientos</Text>
             <Text style={styles.infoText}>Aquí se guardan tus sesiones pasadas. Toca cualquier registro para expandir y ver los ejercicios y series completadas.</Text>
           </View>

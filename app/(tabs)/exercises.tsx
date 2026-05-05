@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ScrollView, Image, LayoutAnimation, Platform, UIManager } from 'react-native';
+import { Exercise, useFitnessStore } from '@/store/useStore';
 import { Ionicons } from '@expo/vector-icons';
-import { useFitnessStore, Exercise } from '@/store/useStore';
+import { useMemo, useState } from 'react';
+import { FlatList, Image, LayoutAnimation, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, UIManager, View } from 'react-native';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -17,8 +17,8 @@ export default function ExercisesScreen() {
 
   const filteredExercises = useMemo(() => {
     return exercises.filter((ex) => {
-      const matchesSearch = ex.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            ex.muscle.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = ex.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ex.muscle.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesFilter = activeFilter === 'Todos' || ex.muscle === activeFilter;
       return matchesSearch && matchesFilter;
     });
@@ -31,10 +31,10 @@ export default function ExercisesScreen() {
 
   const renderExerciseItem = ({ item }: { item: Exercise }) => {
     const isExpanded = expandedId === item.id;
-    
+
     return (
-      <TouchableOpacity 
-        style={styles.exerciseCard} 
+      <TouchableOpacity
+        style={styles.exerciseCard}
         activeOpacity={0.8}
         onPress={() => toggleExpand(item.id)}
       >
@@ -51,17 +51,17 @@ export default function ExercisesScreen() {
               </View>
             </View>
           </View>
-          <Ionicons 
-            name={isExpanded ? "chevron-up" : "chevron-down"} 
-            size={20} 
-            color="#555" 
+          <Ionicons
+            name={isExpanded ? "chevron-up" : "chevron-down"}
+            size={20}
+            color="#555"
           />
         </View>
 
         {isExpanded && (
           <View style={styles.expandedContent}>
             <Text style={styles.description}>{item.description}</Text>
-            
+
             <View style={styles.detailsGrid}>
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Nivel</Text>
@@ -93,12 +93,12 @@ export default function ExercisesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Ejercicios</Text>
-        
+
+
         <View style={styles.infoWrapper}>
           <View style={styles.infoBox}>
             <Ionicons name="information-circle-outline" size={24} color="#00ffcc" />
-            <View style={{flex: 1}}>
+            <View style={{ flex: 1 }}>
               <Text style={styles.infoTitle}>Biblioteca</Text>
               <Text style={styles.infoText}>Busca o filtra ejercicios por grupo muscular. Toca cualquier tarjeta para ver información detallada.</Text>
             </View>
@@ -107,7 +107,7 @@ export default function ExercisesScreen() {
 
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
-          <TextInput 
+          <TextInput
             style={styles.searchInput}
             placeholder="Buscar ejercicio..."
             placeholderTextColor="#888"
@@ -121,8 +121,8 @@ export default function ExercisesScreen() {
           )}
         </View>
 
-        <ScrollView 
-          horizontal 
+        <ScrollView
+          horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.filtersContainer}
           contentContainerStyle={styles.filtersContent}
@@ -130,8 +130,8 @@ export default function ExercisesScreen() {
           {FILTERS.map((filter) => {
             const isActive = activeFilter === filter;
             return (
-              <TouchableOpacity 
-                key={filter} 
+              <TouchableOpacity
+                key={filter}
                 style={[styles.filterChip, isActive && styles.filterChipActive]}
                 onPress={() => setActiveFilter(filter)}
               >
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   header: {
-    paddingTop: 50,
+    paddingTop: 20,
     backgroundColor: '#121212',
     borderBottomWidth: 1,
     borderBottomColor: '#222',
