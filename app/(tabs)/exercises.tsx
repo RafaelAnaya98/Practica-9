@@ -95,6 +95,16 @@ export default function ExercisesScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Ejercicios</Text>
         
+        <View style={styles.infoWrapper}>
+          <View style={styles.infoBox}>
+            <Ionicons name="information-circle-outline" size={24} color="#00ffcc" />
+            <View style={{flex: 1}}>
+              <Text style={styles.infoTitle}>Biblioteca</Text>
+              <Text style={styles.infoText}>Busca o filtra ejercicios por grupo muscular. Toca cualquier tarjeta para ver información detallada.</Text>
+            </View>
+          </View>
+        </View>
+
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
           <TextInput 
@@ -168,6 +178,31 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     paddingHorizontal: 20,
     marginBottom: 15,
+  },
+  infoWrapper: {
+    paddingHorizontal: 20,
+    marginBottom: 15,
+  },
+  infoBox: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0, 255, 204, 0.1)',
+    padding: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 204, 0.3)',
+  },
+  infoTitle: {
+    color: '#00ffcc',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  infoText: {
+    color: '#e0e0e0',
+    fontSize: 14,
+    lineHeight: 20,
   },
   searchContainer: {
     flexDirection: 'row',

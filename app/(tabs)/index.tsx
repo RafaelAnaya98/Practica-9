@@ -28,6 +28,14 @@ export default function HomeScreen() {
         <Text style={styles.subtitle}>¿Listo para destruir tus límites?</Text>
       </View>
 
+      <View style={styles.infoBox}>
+        <Ionicons name="information-circle-outline" size={24} color="#00ffcc" />
+        <View style={{flex: 1}}>
+          <Text style={styles.infoTitle}>¿Cómo empezar?</Text>
+          <Text style={styles.infoText}>Usa 'Entrenar' para iniciar tu rutina. Revisa tus ejercicios y registra tu progreso en las otras secciones.</Text>
+        </View>
+      </View>
+
       <View style={styles.grid}>
         {/* Card 1: Entrenar */}
         <TouchableOpacity 
@@ -118,6 +126,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#888888',
     marginTop: 5,
+  },
+  infoBox: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0, 255, 204, 0.1)',
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 25,
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 204, 0.3)',
+  },
+  infoTitle: {
+    color: '#00ffcc',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  infoText: {
+    color: '#e0e0e0',
+    fontSize: 14,
+    lineHeight: 20,
   },
   grid: {
     flexDirection: 'row',

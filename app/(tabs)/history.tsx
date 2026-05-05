@@ -83,6 +83,16 @@ export default function HistoryScreen() {
         <Text style={styles.headerTitle}>Historial</Text>
       </View>
 
+      <View style={styles.infoWrapper}>
+        <View style={styles.infoBox}>
+          <Ionicons name="information-circle-outline" size={24} color="#00ffcc" />
+          <View style={{flex: 1}}>
+            <Text style={styles.infoTitle}>Tus Entrenamientos</Text>
+            <Text style={styles.infoText}>Aquí se guardan tus sesiones pasadas. Toca cualquier registro para expandir y ver los ejercicios y series completadas.</Text>
+          </View>
+        </View>
+      </View>
+
       {history.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="time-outline" size={64} color="#333" />
@@ -118,6 +128,31 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#ffffff',
+  },
+  infoWrapper: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  infoBox: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0, 255, 204, 0.1)',
+    padding: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 204, 0.3)',
+  },
+  infoTitle: {
+    color: '#00ffcc',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  infoText: {
+    color: '#e0e0e0',
+    fontSize: 14,
+    lineHeight: 20,
   },
   emptyContainer: {
     flex: 1,

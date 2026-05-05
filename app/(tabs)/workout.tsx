@@ -72,6 +72,14 @@ export default function WorkoutScreen() {
         <Ionicons name="barbell-outline" size={60} color="#333" style={{ marginTop: 40 }} />
         <Text style={styles.emptyTitle}>¿Qué entrenamos hoy?</Text>
         
+        <View style={styles.infoBox}>
+          <Ionicons name="information-circle-outline" size={24} color="#00ffcc" />
+          <View style={{flex: 1}}>
+            <Text style={styles.infoTitle}>Comienza tu sesión</Text>
+            <Text style={styles.infoText}>Inicia un entrenamiento libre añadiendo ejercicios a tu gusto, o selecciona una de las rutinas prediseñadas abajo.</Text>
+          </View>
+        </View>
+
         <TouchableOpacity style={styles.primaryButton} onPress={() => setModalVisible(true)}>
           <Ionicons name="add" size={20} color="#000" />
           <Text style={styles.primaryButtonText}>Entrenamiento Libre</Text>
@@ -214,6 +222,30 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
     marginBottom: 30,
+  },
+  infoBox: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0, 255, 204, 0.1)',
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 30,
+    marginTop: 10,
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 204, 0.3)',
+    width: '100%',
+  },
+  infoTitle: {
+    color: '#00ffcc',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  infoText: {
+    color: '#e0e0e0',
+    fontSize: 14,
+    lineHeight: 20,
   },
   primaryButton: {
     backgroundColor: '#00ffcc',
