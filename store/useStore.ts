@@ -28,7 +28,19 @@ export interface WorkoutExercise {
   sets: SetData[];
 }
 
+export interface TemplateExercise {
+  exerciseId: string;
+  sets: number;
+}
+
+export interface WorkoutTemplate {
+  id: string;
+  name: string;
+  exercises: TemplateExercise[];
+}
+
 export interface PastWorkout {
+  name?: string;
   id: string;
   date: string;
   duration: string;
@@ -43,6 +55,16 @@ export interface UserStats {
   recommendedRest: string;
 }
 
+export interface ProgressRecord {
+  id: string;
+  date: string;
+  weight: string;
+  waist: string;
+  chest: string;
+  hips: string;
+  photos: string[];
+}
+
 interface FitnessState {
   // Ejercicios (Mock Data)
   exercises: Exercise[];
@@ -55,6 +77,8 @@ interface FitnessState {
   
   // Entrenar - Plantilla activa (Mock Data)
   currentWorkout: WorkoutExercise[];
+  currentWorkoutName: string | null;
+  templates: WorkoutTemplate[];
   
   // Descanso (State)
   restTimerSeconds: number;
@@ -75,6 +99,11 @@ interface FitnessState {
   finishWorkout: () => void;
   
   workoutStartTime: number | null;
+  loadTemplate: (templateId: string) => void;
+
+  // Progreso
+  progressRecords: ProgressRecord[];
+  addProgressRecord: (record: Omit<ProgressRecord, 'id'>) => void;
 }
 
 const mockExercises: Exercise[] = [
@@ -367,6 +396,63 @@ const mockExercises: Exercise[] = [
   }
 ];
 
+const mockTemplates: WorkoutTemplate[] = [
+  {
+    id: 't_push',
+    name: 'Push (Pecho, Hombro, Tríceps)',
+    exercises: [
+      { exerciseId: 'e_pecho_1', sets: 4 },
+      { exerciseId: 'e_pecho_2', sets: 3 },
+      { exerciseId: 'e_hombros_1', sets: 4 },
+      { exerciseId: 'e_hombros_2', sets: 3 },
+      { exerciseId: 'e_brazos_2', sets: 3 },
+    ]
+  },
+  {
+    id: 't_pull',
+    name: 'Pull (Espalda, Bíceps)',
+    exercises: [
+      { exerciseId: 'e_espalda_1', sets: 4 },
+      { exerciseId: 'e_espalda_2', sets: 4 },
+      { exerciseId: 'e_espalda_4', sets: 3 },
+      { exerciseId: 'e_brazos_1', sets: 4 },
+      { exerciseId: 'e_brazos_3', sets: 3 },
+    ]
+  },
+  {
+    id: 't_pierna',
+    name: 'Pierna Completa',
+    exercises: [
+      { exerciseId: 'e_piernas_1', sets: 4 },
+      { exerciseId: 'e_piernas_2', sets: 4 },
+      { exerciseId: 'e_piernas_3', sets: 4 },
+      { exerciseId: 'e_piernas_4', sets: 3 },
+    ]
+  },
+  {
+    id: 't_torso',
+    name: 'Torso',
+    exercises: [
+      { exerciseId: 'e_pecho_1', sets: 4 },
+      { exerciseId: 'e_espalda_2', sets: 4 },
+      { exerciseId: 'e_hombros_1', sets: 3 },
+      { exerciseId: 'e_brazos_1', sets: 3 },
+      { exerciseId: 'e_brazos_2', sets: 3 },
+    ]
+  },
+  {
+    id: 't_fullbody',
+    name: 'Full Body',
+    exercises: [
+      { exerciseId: 'e_piernas_1', sets: 3 },
+      { exerciseId: 'e_pecho_1', sets: 3 },
+      { exerciseId: 'e_espalda_2', sets: 3 },
+      { exerciseId: 'e_hombros_2', sets: 3 },
+      { exerciseId: 'e_core_2', sets: 3 },
+    ]
+  }
+];
+
 // currentWorkout starts empty
 const mockWorkout: WorkoutExercise[] = [];
 
@@ -385,14 +471,53 @@ export const useFitnessStore = create<FitnessState>()(
       history: mockHistory,
       userStats: mockStats,
       currentWorkout: mockWorkout,
+      currentWorkoutName: null,
+      templates: mockTemplates,
       workoutStartTime: null,
       restTimerSeconds: 90, // 1:30 min por defecto
       isRestTimerRunning: false,
       lastUsedRestTime: 90,
+      progressRecords: [],
       
       setRestTimerSeconds: (seconds) => set({ restTimerSeconds: seconds }),
       toggleRestTimer: () => set((state) => ({ isRestTimerRunning: !state.isRestTimerRunning })),
       setLastUsedRestTime: (seconds) => set({ lastUsedRestTime: seconds }),
+
+      loadTemplate: (templateId) => set((state) => {
+        const template = state.templates.find(t => t.id === templateId);
+        if (!template) return state;
+
+        const newWorkout: WorkoutExercise[] = template.exercises.map(te => {
+          const ex = state.exercises.find(e => e.id === te.exerciseId);
+          if (!ex) return null;
+          
+          const sets: SetData[] = Array.from({ length: te.sets }).map((_, i) => ({
+            id: Date.now().toString() + Math.random().toString() + i,
+            reps: '',
+            weight: '',
+            completed: false
+          }));
+
+          return {
+            id: Date.now().toString() + Math.random().toString(),
+            exercise: ex,
+            sets
+          };
+        }).filter(Boolean) as WorkoutExercise[];
+
+        return {
+          currentWorkoutName: template.name,
+          currentWorkout: newWorkout,
+          workoutStartTime: Date.now()
+        };
+      }),
+
+      addProgressRecord: (record) => set((state) => ({
+        progressRecords: [
+          ...state.progressRecords,
+          { ...record, id: Date.now().toString() }
+        ]
+      })),
 
       addExerciseToWorkout: (exercise) => set((state) => ({
         workoutStartTime: state.workoutStartTime || Date.now(),
@@ -481,6 +606,7 @@ export const useFitnessStore = create<FitnessState>()(
 
         const newWorkout: PastWorkout = {
           id: Date.now().toString(),
+          name: state.currentWorkoutName || 'Entrenamiento libre',
           date: new Date().toLocaleDateString(),
           duration: duration,
           volume: volume,
@@ -491,6 +617,7 @@ export const useFitnessStore = create<FitnessState>()(
         return {
           history: [newWorkout, ...state.history],
           currentWorkout: [],
+          currentWorkoutName: null,
           workoutStartTime: null,
         };
       }),
@@ -502,8 +629,10 @@ export const useFitnessStore = create<FitnessState>()(
         history: state.history,
         userStats: state.userStats,
         currentWorkout: state.currentWorkout,
+        currentWorkoutName: state.currentWorkoutName,
         restTimerSeconds: state.restTimerSeconds,
         lastUsedRestTime: state.lastUsedRestTime,
+        progressRecords: state.progressRecords,
         // we omit exercises so the mock data updates correctly when reloading the app
       } as any),
     }

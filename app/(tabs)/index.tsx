@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { currentWorkout, history, isRestTimerRunning, restTimerSeconds, exercises } = useFitnessStore();
+  const { currentWorkout, history, isRestTimerRunning, restTimerSeconds, exercises, progressRecords } = useFitnessStore();
 
   const isWorkoutActive = currentWorkout.length > 0;
   const entrenarSummary = isWorkoutActive ? `${currentWorkout.length} ej. activos` : 'Sin iniciar';
@@ -71,6 +71,17 @@ export default function HomeScreen() {
           <Ionicons name="library" size={24} color="#00ffcc" />
           <Text style={styles.cardTitle}>Ejercicios</Text>
           <Text style={styles.cardValue}>{exercises.length} disp.</Text>
+        </TouchableOpacity>
+
+        {/* Card 5: Progreso */}
+        <TouchableOpacity 
+          style={styles.card} 
+          onPress={() => router.navigate('/progress')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="trending-up" size={24} color="#00ffcc" />
+          <Text style={styles.cardTitle}>Progreso</Text>
+          <Text style={styles.cardValue}>{progressRecords.length} reg.</Text>
         </TouchableOpacity>
       </View>
 

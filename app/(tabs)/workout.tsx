@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image, Modal, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useFitnessStore, Exercise } from '@/store/useStore';
+import { useFitnessStore, Exercise, WorkoutTemplate } from '@/store/useStore';
 
 export default function WorkoutScreen() {
   const { 
     currentWorkout, 
+    currentWorkoutName,
+    templates,
+    loadTemplate,
     exercises,
     addExerciseToWorkout,
     removeExerciseFromWorkout,
@@ -65,23 +68,40 @@ export default function WorkoutScreen() {
 
   if (currentWorkout.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Ionicons name="barbell-outline" size={80} color="#333" />
-        <Text style={styles.emptyTitle}>¿Listo para entrenar?</Text>
-        <Text style={styles.emptySubtitle}>Añade ejercicios a tu rutina para comenzar a registrar tu progreso.</Text>
+      <ScrollView style={styles.container} contentContainerStyle={styles.emptyContainer}>
+        <Ionicons name="barbell-outline" size={60} color="#333" style={{ marginTop: 40 }} />
+        <Text style={styles.emptyTitle}>¿Qué entrenamos hoy?</Text>
+        
         <TouchableOpacity style={styles.primaryButton} onPress={() => setModalVisible(true)}>
           <Ionicons name="add" size={20} color="#000" />
-          <Text style={styles.primaryButtonText}>Añadir Ejercicio</Text>
+          <Text style={styles.primaryButtonText}>Entrenamiento Libre</Text>
         </TouchableOpacity>
+
+        <View style={styles.templatesSection}>
+          <Text style={styles.templatesTitle}>Rutinas Prediseñadas</Text>
+          <View style={styles.templatesGrid}>
+            {templates && templates.map(template => (
+              <TouchableOpacity 
+                key={template.id} 
+                style={styles.templateCard}
+                onPress={() => loadTemplate(template.id)}
+              >
+                <Text style={styles.templateName}>{template.name}</Text>
+                <Text style={styles.templateDetail}>{template.exercises.length} ejercicios</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         {renderExerciseModal()}
-      </View>
+      </ScrollView>
     );
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Entrenamiento Activo</Text>
+        <Text style={styles.headerTitle}>{currentWorkoutName || 'Entrenamiento Libre'}</Text>
         <Text style={styles.headerSubtitle}>Volumen actual: {calculateTotalVolume()} kg</Text>
       </View>
 
@@ -176,11 +196,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   emptyContainer: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: '#000000',
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: 30,
+    padding: 20,
+    paddingBottom: 50,
   },
   emptyTitle: {
     fontSize: 24,
@@ -208,6 +228,40 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  templatesSection: {
+    width: '100%',
+    marginTop: 40,
+  },
+  templatesTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 15,
+  },
+  templatesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 15,
+  },
+  templateCard: {
+    width: '47%',
+    backgroundColor: '#121212',
+    borderRadius: 12,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  templateName: {
+    color: '#00ffcc',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  templateDetail: {
+    color: '#888',
+    fontSize: 12,
   },
   header: {
     paddingTop: 50,

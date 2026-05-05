@@ -16,11 +16,15 @@ const HistoryCard = ({ item }: { item: PastWorkout }) => {
           </View>
           <Ionicons name={expanded ? "chevron-down" : "chevron-forward"} size={20} color="#555" />
         </View>
-        
         <Text style={styles.workoutTitle}>
-          {item.muscles && item.muscles.length > 0 ? item.muscles.join(', ') : 'Entrenamiento general'}
+          {item.name ? item.name : (item.muscles && item.muscles.length > 0 ? item.muscles.join(', ') : 'Entrenamiento general')}
         </Text>
         
+        {item.name && item.muscles && item.muscles.length > 0 && (
+          <Text style={styles.workoutSubtitle}>
+            Músculos: {item.muscles.join(', ')}
+          </Text>
+        )}
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Ionicons name="time-outline" size={16} color="#888" />
@@ -162,11 +166,17 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#ffffff',
+    marginBottom: 5,
+  },
+  workoutSubtitle: {
+    fontSize: 14,
+    color: '#888',
     marginBottom: 15,
   },
   statsRow: {
     flexDirection: 'row',
     gap: 20,
+    marginTop: 5,
   },
   statItem: {
     flexDirection: 'row',
